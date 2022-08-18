@@ -9,11 +9,17 @@ ARG NODE_VERSION="none"
 RUN if [ "${NODE_VERSION}" != "none" ]; then su vscode -c "umask 0002 && . /usr/local/share/nvm/nvm.sh && nvm install ${NODE_VERSION} 2>&1"; fi
 
 
-RUN apt-get update && apt-get install unzip -y
-COPY .bashrc /home/vscode/
+RUN apt-get update && apt-get install unzip python3-pip -y
 ADD https://github.com/vincent-nelis/debeka-exp/archive/refs/heads/master.zip /home/vscode
-RUN unzip /home/node/master.zip -d /home/vscode
+RUN unzip /home/vscode/master.zip -d /home/vscode
 
+RUN mkdir -p /workspaces/debeka-dev/exp
+RUN cp /home/vscode/debeka-master/*.ipynb /workspaces/debeka-dev/exp/
+RUN chmod 0444 /workspaces/debeka-dev/exp
+RUN chmod 0444 /workspaces/debeka-dev/exp/*
+
+RUN rm -rf /home/vscode/debeka-master
+RUN rm -f /home/vscode/master.zip
 
 # [Optional] If your pip requirements rarely change, uncomment this section to add them to the image.
 # COPY requirements.txt /tmp/pip-tmp/

@@ -8,18 +8,27 @@ FROM mcr.microsoft.com/vscode/devcontainers/python:0-${VARIANT}
 ARG NODE_VERSION="none"
 RUN if [ "${NODE_VERSION}" != "none" ]; then su vscode -c "umask 0002 && . /usr/local/share/nvm/nvm.sh && nvm install ${NODE_VERSION} 2>&1"; fi
 
+# Install required software as root
+RUN apt-get update \
+    && apt-get install unzip python3-pip -y \
+    # Clean up
+    && apt-get autoremove -y \
+    && apt-get clean -y \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install unzip python3-pip -y
+# Install the debeka exploration enviornment
 ADD https://github.com/vincent-nelis/debeka-exp/archive/refs/heads/master.zip /home/vscode
 RUN unzip /home/vscode/master.zip -d /home/vscode
 
-RUN mkdir -p /workspaces/debeka-dev/exp
-RUN cp /home/vscode/debeka-master/*.ipynb /workspaces/debeka-dev/exp/
-RUN chmod 0444 /workspaces/debeka-dev/exp
-RUN chmod 0444 /workspaces/debeka-dev/exp/*
-
-RUN rm -rf /home/vscode/debeka-master
+# Delete the downloaded zip file
 RUN rm -f /home/vscode/master.zip
+
+# Rename the downloaded code
+RUN mv /home/vscode/debeka-master /home/vscode/exp
+
+# Delete all the files that are not notebooks
+RUN find /home/vscode/exp/ -type f ! -iname "*.ipynb" -delete
+#RUN rm -- *.!(ipynb)
 
 # [Optional] If your pip requirements rarely change, uncomment this section to add them to the image.
 # COPY requirements.txt /tmp/pip-tmp/
